@@ -1,4 +1,6 @@
 github.com/NubeIO/lib-schema v0.2.18 h1:PmoZAdZFg22zZaXO29hYRL5a/IwZPXAEM9okY5x0A4M=
 github.com/NubeIO/lib-schema v0.2.18/go.mod h1:TGKDA6IIWHDwr5Aabawj6FF7NXUWXqu4ozWfph/hIjw=
+github.com/NubeIO/schema v0.0.1 h1:/H3g7Qex1nA6RpwrzxsyP0+qblbljmnRZaAzfXbAYXU=
+github.com/NubeIO/schema v0.0.1/go.mod h1:l22AbV+69tAsjh4iIvQsaI7rzwiTQ8pHpbO16D4W1IE=
 github.com/google/uuid v1.5.0 h1:1p67kYwdtXjb0gL0BPiP1Av9wiZPo5A8z2cWkTZ+eyU=
 github.com/google/uuid v1.5.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
