@@ -51,7 +51,8 @@ type Node interface {
 	GetAllOutputValues() []*Port
 	SetLastValue(port *Port)
 	GetPortValue(portID string) (*Port, error)
-	BuildSchema() *schema.Generated
+	GetSchema() *schema.Generated
+	BuildSchema()
 	AddSettings(settings *Settings)
 	GetSettings() *Settings
 	GetMeta() *Meta

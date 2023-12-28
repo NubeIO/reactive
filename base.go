@@ -16,7 +16,7 @@ type BaseNode struct {
 	Bus            map[string]chan *message
 	Connections    []*Connection
 	Settings       *Settings
-	schema         *schema.Generated
+	Schema         *schema.Generated
 	Meta           *Meta
 	mux            sync.Mutex
 	PublishOnTopic bool // if its set to true we will publish its parent info as a topic eg; myFolder/bacnetPoint
