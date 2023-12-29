@@ -1,16 +1,25 @@
 package plugins
 
+import (
+	"errors"
+)
+
 type Node struct {
 	ID       string  `json:"id"`
 	Export   string  `json:"-"`
 	Children []*Node `json:"children,omitempty"`
 }
 
+type Category struct {
+	Name  string  `json:"name"`
+	Nodes []*Node `json:"nodes,omitempty"`
+}
+
 type Export struct {
-	Name        string             `json:"name"`
-	Version     string             `json:"version"`
-	Description string             `json:"description"`
-	Nodes       map[string][]*Node `json:"nodes"`
+	Name        string      `json:"name"`
+	Version     string      `json:"version"`
+	Description string      `json:"description"`
+	Categories  []*Category `json:"categories,omitempty"`
 }
 
 func NewPlugin(name, version, description string) *Export {
@@ -18,69 +27,90 @@ func NewPlugin(name, version, description string) *Export {
 		Name:        name,
 		Version:     version,
 		Description: description,
-		Nodes:       make(map[string][]*Node),
+		Categories:  make([]*Category, 0),
 	}
 }
 
-func (p *Export) AddCategory(category string) {
-	p.Nodes[category] = []*Node{}
+func (p *Export) AddCategory(categoryName string) {
+	category := &Category{Name: categoryName, Nodes: make([]*Node, 0)}
+	p.Categories = append(p.Categories, category)
 }
 
-func (p *Export) AddNode(category, id, export string) {
-	node := &Node{
-		ID:     id,
-		Export: export,
-	}
-	p.Nodes[category] = append(p.Nodes[category], node)
-}
-
-func (p *Export) AddChildNode(category, parentID, childID, childExport string) {
-	childNode := &Node{ID: childID, Export: childExport}
-
-	for i, node := range p.Nodes[category] {
-		if node.ID == parentID {
-			p.Nodes[category][i].Children = append(p.Nodes[category][i].Children, childNode)
-			return
+func (p *Export) GetCategory(categoryName string) (*Category, error) {
+	for _, category := range p.Categories {
+		if category.Name == categoryName {
+			return category, nil
 		}
 	}
+	return nil, errors.New("category not found")
 }
 
-func (p *Export) GetNode(nodeName string, pluginExport *Export) *Node {
-	for _, category := range pluginExport.Nodes {
-		for _, node := range category {
-			if node.ID == nodeName {
-				return node
-			}
+func (p *Export) AddNode(categoryName, nodeID, export string) error {
+	category, err := p.GetCategory(categoryName)
+	if err != nil {
+		return err
+	}
+
+	node := &Node{ID: nodeID, Export: export}
+	category.Nodes = append(category.Nodes, node)
+	return nil
+}
+
+func (p *Export) AddChildNode(categoryName, parentID, childID, childExport string) error {
+	category, err := p.GetCategory(categoryName)
+	if err != nil {
+		return err
+	}
+
+	parentNode := p.findNodeByID(category.Nodes, parentID)
+	if parentNode == nil {
+		return errors.New("parent node not found")
+	}
+
+	childNode := &Node{ID: childID, Export: childExport}
+	parentNode.Children = append(parentNode.Children, childNode)
+	return nil
+}
+
+func (p *Export) findNodeByID(nodes []*Node, id string) *Node {
+	for _, node := range nodes {
+		if node.ID == id {
+			return node
+		}
+		if foundNode := p.findNodeByID(node.Children, id); foundNode != nil {
+			return foundNode
 		}
 	}
 	return nil
 }
 
-func (p *Export) GetNodes(pluginExport *Export) []*Node {
-	var nodes []*Node
-	for _, category := range pluginExport.Nodes {
-		for _, node := range category {
-			nodes = append(nodes, node)
-			nodes = append(nodes, node.Children...)
-		}
+func (p *Export) GetAllNodes() []*Node {
+	var allNodes []*Node
+
+	for _, category := range p.Categories {
+		allNodes = append(allNodes, p.getAllNodesInCategory(category.Nodes)...)
 	}
-	return nodes
+
+	return allNodes
 }
 
-func (p *Export) GetChildNodes(pluginExport *Export) []*Node {
-	var children []*Node
-	for _, category := range pluginExport.Nodes {
-		for _, node := range category {
-			children = append(children, node.Children...)
-		}
+func (p *Export) getAllNodesInCategory(nodes []*Node) []*Node {
+	var allNodes []*Node
+
+	for _, node := range nodes {
+		allNodes = append(allNodes, node)
+		allNodes = append(allNodes, p.getAllNodesInCategory(node.Children)...)
 	}
-	return children
+
+	return allNodes
 }
 
-func (p *Export) GetAllCategories(pluginExport *Export) map[string][]*Node {
-	return pluginExport.Nodes
-}
+func (p *Export) GelNodes(export *Export) []*Node {
+	var allNodes []*Node
 
-func (p *Export) GetCategory(name string, pluginExport *Export) []*Node {
-	return pluginExport.Nodes[name]
+	for _, category := range export.Categories {
+		allNodes = append(allNodes, p.getAllNodesInCategory(category.Nodes)...)
+	}
+
+	return allNodes
 }
