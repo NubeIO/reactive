@@ -6,9 +6,19 @@ type Position struct {
 }
 
 type Meta struct {
-	Position Position `json:"position"`
+	Position   Position `json:"position"`
+	ParentUUID string   `json:"parentUUID"`
+}
+
+func (n *BaseNode) SetMeta(opts *Options) {
+	if opts != nil {
+		n.meta = opts.Meta
+		if n.meta != nil {
+			n.parentUUID = n.meta.ParentUUID
+		}
+	}
 }
 
 func (n *BaseNode) GetMeta() *Meta {
-	return n.Meta
+	return n.meta
 }

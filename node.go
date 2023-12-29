@@ -33,11 +33,19 @@ const (
 	output portDirection = "output"
 )
 
+type Details struct {
+	Category string  `json:"category"`
+	ParentID *string `json:"parentID"`
+}
+
 type Node interface {
-	New(nodeUUID, name string, bus *EventBus, settings *Settings, opts *NodeOpts) Node
+	New(nodeUUID, name string, bus *EventBus, settings *Settings, opts *Options) Node
+	SetDetails(details *Details)
+	GetDetails() *Details
 	Start()
 	Delete()
 	GetUUID() string
+	GetParentUUID() string
 	GetID() string
 	GetNodeName() string
 	NewPort(port *Port)
@@ -55,6 +63,7 @@ type Node interface {
 	BuildSchema()
 	AddSettings(settings *Settings)
 	GetSettings() *Settings
+	SetMeta(opts *Options)
 	GetMeta() *Meta
 	AddConnection(connection *Connection)
 	GetConnections() []*Connection
@@ -69,9 +78,16 @@ type Node interface {
 	GetRuntimeNodes() map[string]Node
 	AddToNodeToRuntime(node Node) Node
 	RemoveNodeFromRuntime()
+
+	RegisterChildNode(child Node)
+	GetChildNodes() []Node
+	GetChildNode(uuid string) Node
+	GetChildsByType(nodeID string) []Node
+	GetPortValuesChildNode(uuid string) []*Port
+	SetLastValueChildNode(uuid string, port *Port)
 }
 
-func (n *BaseNode) New(nodeUUID, name string, bus *EventBus, settings *Settings, opts *NodeOpts) Node {
+func (n *BaseNode) New(nodeUUID, name string, bus *EventBus, settings *Settings, opts *Options) Node {
 	return n
 }
 
@@ -167,7 +183,7 @@ func (n *BaseNode) PublishMessage(port *Port, setLastValue ...bool) {
 	fmt.Printf("Published message from node: (name: %s uuid: %s) to topic: %s value %v\n", n.GetID(), n.GetUUID(), topic, printValue(port.Value))
 }
 
-type NodeOpts struct {
+type Options struct {
 	addToNodesMap bool
 	Meta          *Meta
 }

@@ -9,6 +9,7 @@ type BaseNode struct {
 	EventBus       *EventBus
 	ID             string
 	UUID           string
+	parentUUID     string
 	Name           string
 	Inputs         []*Port
 	Outputs        []*Port
@@ -16,13 +17,15 @@ type BaseNode struct {
 	Bus            map[string]chan *message
 	Connections    []*Connection
 	Settings       *Settings
+	nodeDetails    *Details
 	Schema         *schema.Generated
-	Meta           *Meta
+	meta           *Meta
 	mux            sync.Mutex
 	PublishOnTopic bool // if its set to true we will publish its parent info as a topic eg; myFolder/bacnetPoint
 	allowHotFix    bool
 	loaded         bool
 	runtimeNodes   map[string]Node
+	childNodes     map[string]Node
 }
 
 // NewBaseNode creates a new BaseNode with the given ID, name, EventBus, and Flow.
@@ -42,5 +45,6 @@ func NewBaseNode(id, nodeUUID, name string, bus *EventBus) *BaseNode {
 		LastValue:   make(map[string]*Port),
 		Connections: nil,
 		allowHotFix: false,
+		childNodes:  make(map[string]Node),
 	}
 }
