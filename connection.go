@@ -1,6 +1,8 @@
 package reactive
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // Connection defines a structure for input subscriptions.
 type Connection struct {
@@ -30,7 +32,7 @@ func (n *BaseNode) AddConnection(connection *Connection) {
 
 	sourceTopic := fmt.Sprintf("%s-%s", sourceNodeUUID, sourceOutput)
 	fmt.Printf("Add new connection type: %s from: (%s-%s) to: (%s-%s) \n", connection.FlowDirection, sourceNodeUUID, sourceOutput, targetNodeUUID, targetInput)
-	n.Bus[targetNodeUUID] = make(chan *message, 1)
+	n.Bus[targetNodeUUID] = make(chan *Message, 1)
 	n.EventBus.Subscribe(sourceTopic, n.Bus[targetInput])
 	subscriber := &Connection{
 		SourceUUID:    sourceNodeUUID,

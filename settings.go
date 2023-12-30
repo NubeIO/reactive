@@ -1,5 +1,11 @@
 package reactive
 
+import (
+	"errors"
+	"fmt"
+	"reflect"
+)
+
 // ---------------------------- NODE SETTINGS -------------------------- //
 
 type Settings struct {
@@ -27,13 +33,36 @@ func (s *Settings) GetFloat64ValuePointer() *float64 {
 }
 
 func (n *BaseNode) GetSettings() *Settings {
-	return n.Settings
+	return n.settings
 }
 
 func (n *BaseNode) AddSettings(settings *Settings) {
-	n.Settings = settings
+	n.settings = settings
 }
 
 func (n *BaseNode) UpdateSettings(settings *Settings) {
-	n.Settings = settings
+	n.settings = settings
+}
+
+func (n *BaseNode) AddData(key string, data any) {
+	n.data[key] = data
+}
+
+func (n *BaseNode) GetDataByKey(key string, out interface{}) error {
+	data, exists := n.data[key]
+	if !exists {
+		return errors.New(fmt.Sprintf("failed to find by key: %s", key))
+	}
+	outValue := reflect.ValueOf(out).Elem()
+	dataValue := reflect.ValueOf(data)
+	fmt.Println(11111, outValue.Type(), dataValue.Type())
+	if outValue.Type() != dataValue.Type() {
+		return errors.New("type mismatch")
+	}
+	outValue.Set(dataValue)
+	return nil
+}
+
+func (n *BaseNode) GetData() map[string]any {
+	return n.data
 }

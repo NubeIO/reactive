@@ -18,6 +18,7 @@ type Category struct {
 type Export struct {
 	Name        string      `json:"name"`
 	Version     string      `json:"version"`
+	Path        string      `json:"path"` // its file name
 	Description string      `json:"description"`
 	Categories  []*Category `json:"categories,omitempty"`
 }

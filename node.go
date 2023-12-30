@@ -60,10 +60,13 @@ type Node interface {
 	SetLastValue(port *Port)
 	GetPortValue(portID string) (*Port, error)
 	GetSchema() *schema.Generated
-	BuildSchema()
+	AddSchema()
 	AddSettings(settings *Settings)
 	GetSettings() *Settings
-	SetMeta(opts *Options)
+	AddData(key string, data any)
+	GetDataByKey(key string, out interface{}) error
+	GetData() map[string]any
+	setMeta(opts *Options)
 	GetMeta() *Meta
 	AddConnection(connection *Connection)
 	GetConnections() []*Connection
@@ -171,7 +174,7 @@ func (n *BaseNode) PublishMessage(port *Port, setLastValue ...bool) {
 		log.Fatalf("port name can not be empty")
 	}
 	topic := n.setPortTopic(port.ID)
-	m := &message{
+	m := &Message{
 		Port:     port,
 		NodeUUID: n.GetUUID(),
 		NodeID:   n.GetID(),
@@ -181,6 +184,18 @@ func (n *BaseNode) PublishMessage(port *Port, setLastValue ...bool) {
 	}
 	go n.EventBus.Publish(topic, m)
 	fmt.Printf("Published message from node: (name: %s uuid: %s) to topic: %s value %v\n", n.GetID(), n.GetUUID(), topic, printValue(port.Value))
+
+	if len(n.EventBus.WS.Connections) > 0 {
+		fmt.Printf("Published WS from node: (name: %s uuid: %s) to topic: %s value %v\n", n.GetID(), n.GetUUID(), topic, printValue(port.Value))
+
+		msg := &Message{
+			Port:     port,
+			NodeUUID: n.GetUUID(),
+			NodeID:   n.GetID(),
+		}
+		n.EventBus.WS.Broadcast <- msg
+	}
+
 }
 
 type Options struct {

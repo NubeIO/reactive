@@ -10,7 +10,7 @@ type Meta struct {
 	ParentUUID string   `json:"parentUUID"`
 }
 
-func (n *BaseNode) SetMeta(opts *Options) {
+func (n *BaseNode) setMeta(opts *Options) {
 	if opts != nil {
 		n.meta = opts.Meta
 		if n.meta != nil {

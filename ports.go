@@ -37,7 +37,7 @@ func (n *BaseNode) NewOutputPort(id, name string, dataType portDataType) {
 func (n *BaseNode) NewPort(port *Port) {
 	if port.Direction == input {
 		n.Inputs = append(n.Inputs, port)
-		n.Bus[port.ID] = make(chan *message, 1)
+		n.Bus[port.ID] = make(chan *Message, 1)
 	} else if port.Direction == output {
 		n.Outputs = append(n.Outputs, port)
 	}
