@@ -55,7 +55,6 @@ func (n *BaseNode) GetDataByKey(key string, out interface{}) error {
 	}
 	outValue := reflect.ValueOf(out).Elem()
 	dataValue := reflect.ValueOf(data)
-	fmt.Println(11111, outValue.Type(), dataValue.Type())
 	if outValue.Type() != dataValue.Type() {
 		return errors.New("type mismatch")
 	}

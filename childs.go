@@ -1,10 +1,7 @@
 package reactive
 
-import "fmt"
-
 // RegisterChildNode registers a node as a child
 func (n *BaseNode) RegisterChildNode(child Node) {
-	fmt.Println(n.childNodes, 99999999999)
 	n.childNodes[child.GetUUID()] = child
 }
 

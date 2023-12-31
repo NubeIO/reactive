@@ -1,7 +1,10 @@
 package reactive
 
 import (
+	message "github.com/NubeIO/reactive/tracer"
 	"github.com/NubeIO/schema"
+	"github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 	"sync"
 )
 
@@ -27,6 +30,9 @@ type BaseNode struct {
 	loaded         bool
 	runtimeNodes   map[string]Node
 	childNodes     map[string]Node
+	tracer         *message.Tracer
+	db             *gorm.DB
+	logger         *logrus.Logger
 }
 
 // NewBaseNode creates a new BaseNode with the given ID, name, EventBus, and Flow.

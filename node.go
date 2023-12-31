@@ -2,8 +2,11 @@ package reactive
 
 import (
 	"fmt"
+	"github.com/NubeIO/reactive/tracer"
 	"github.com/NubeIO/schema"
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 	"log"
 	"reflect"
 	"strings"
@@ -88,6 +91,15 @@ type Node interface {
 	GetChildsByType(nodeID string) []Node
 	GetPortValuesChildNode(uuid string) []*Port
 	SetLastValueChildNode(uuid string, port *Port)
+
+	AddTracer(stack *tracer.Tracer)
+	Tracer() *tracer.Tracer
+
+	AddDB(db *gorm.DB)
+	GetDB() *gorm.DB
+
+	AddLogger(logger *logrus.Logger)
+	GetLogger() *logrus.Logger
 }
 
 func (n *BaseNode) New(nodeUUID, name string, bus *EventBus, settings *Settings, opts *Options) Node {
