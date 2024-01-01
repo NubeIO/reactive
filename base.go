@@ -1,6 +1,7 @@
 package reactive
 
 import (
+	"github.com/NubeIO/reactive/helpers"
 	message "github.com/NubeIO/reactive/tracer"
 	"github.com/NubeIO/schema"
 	"github.com/sirupsen/logrus"
@@ -14,6 +15,8 @@ type BaseNode struct {
 	UUID           string
 	parentUUID     string
 	Name           string
+	pluginName     string
+	application    string // eg modbus-driver
 	Inputs         []*Port
 	Outputs        []*Port
 	LastValue      map[string]*Port
@@ -24,6 +27,7 @@ type BaseNode struct {
 	nodeDetails    *Details
 	Schema         *schema.Generated
 	meta           *Meta
+	options        *Options
 	mux            sync.Mutex
 	PublishOnTopic bool // if its set to true we will publish its parent info as a topic eg; myFolder/bacnetPoint
 	allowHotFix    bool
@@ -35,16 +39,63 @@ type BaseNode struct {
 	logger         *logrus.Logger
 }
 
-// NewBaseNode creates a new BaseNode with the given ID, name, EventBus, and Flow.
-func NewBaseNode(id, nodeUUID, name string, bus *EventBus, opts *Options) *BaseNode {
-	if nodeUUID == "" {
-		nodeUUID = generateShortUUID()
+type Info struct {
+	NodeID      string
+	NodeUUID    string
+	Name        string
+	PluginName  string
+	Application string
+}
+
+// NodeInfo
+//   - NodeID
+//   - NodeUUID
+//   - Name
+//   - PluginName
+//   - Application
+func NodeInfo(s ...string) *Info {
+	setup := &Info{
+		NodeID:     "",
+		NodeUUID:   "",
+		Name:       "",
+		PluginName: "",
 	}
-	n := &BaseNode{
+
+	// Check the length of s and assign values accordingly
+	if len(s) > 0 {
+		setup.NodeID = s[0]
+	}
+	if len(s) > 1 {
+		setup.NodeUUID = s[1]
+	}
+	if len(s) > 2 {
+		setup.Name = s[2]
+	}
+	if len(s) > 3 {
+		setup.PluginName = s[3]
+	}
+	if len(s) > 4 {
+		setup.PluginName = s[4]
+	}
+
+	return setup
+}
+
+// NewBaseNode creates a new BaseNode with the given ID, name, EventBus, and Flow.
+func NewBaseNode(n *Info, bus *EventBus, opts *Options) *BaseNode {
+	if n == nil {
+		n = &Info{}
+	}
+	if n.NodeUUID == "" {
+		n.NodeUUID = helpers.UUID()
+	}
+	newNode := &BaseNode{
 		EventBus:    bus,
-		ID:          id,
-		Name:        name,
-		UUID:        nodeUUID,
+		ID:          n.NodeID,
+		Name:        n.Name,
+		UUID:        n.NodeUUID,
+		pluginName:  n.PluginName,
+		application: n.Application,
 		Inputs:      []*Port{},
 		Outputs:     []*Port{},
 		Bus:         make(map[string]chan *Message),
@@ -54,6 +105,6 @@ func NewBaseNode(id, nodeUUID, name string, bus *EventBus, opts *Options) *BaseN
 		childNodes:  make(map[string]Node),
 		data:        make(map[string]any),
 	}
-	n.setMeta(opts)
-	return n
+	newNode.setOptions(opts)
+	return newNode
 }

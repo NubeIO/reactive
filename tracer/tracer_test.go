@@ -36,15 +36,15 @@ func TestNewMessageStack(t *testing.T) {
 		return
 	}
 
-	tracer.Info("info !!!!1")
+	tracer.Infof("%s-%d", "test", 123)
 	tracer.Error("error #####")
 
-	tracer.SaveMessagesToDB(10)
+	tracer.SaveMessagesToDB(4)
 	//
 	tracers, _ := tracer.GetAllTracers()
 	for _, trace := range tracers {
 		for i2, message := range trace.Messages {
-			fmt.Println(i2+1, message.UUID, message.Text)
+			fmt.Println(i2+1, message.UUID, message.Timestamp)
 		}
 	}
 

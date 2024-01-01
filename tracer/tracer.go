@@ -1,6 +1,7 @@
 package tracer
 
 import (
+	"errors"
 	"fmt"
 	"github.com/NubeIO/reactive/helpers"
 	"github.com/sirupsen/logrus"
@@ -15,10 +16,10 @@ const (
 )
 
 type Tracer struct {
-	UUID            string `json:"uuid" sql:"uuid" gorm:"type:varchar(255);unique;primaryKey"`
-	path            string // plugin, service name
-	application     string // modbus
-	key             string
+	UUID            string     `json:"uuid" sql:"uuid" gorm:"type:varchar(255);unique;primaryKey"`
+	Path            string     // plugin, service name
+	Application     string     // modbus
+	Key             string     // could like modbus read-coil, something common
 	instanceUUID    string     // node uuid
 	Messages        []*Message `json:"messages,omitempty" gorm:"constraint:OnDelete:CASCADE"`
 	unsavedMessages []*Message // Store unsaved messages in memory
@@ -28,8 +29,8 @@ type Tracer struct {
 
 func NewTracer(path, application string, logger *logrus.Logger, db *gorm.DB) *Tracer {
 	return &Tracer{
-		path:            path,
-		application:     application,
+		Path:            path,
+		Application:     application,
 		Messages:        []*Message{},
 		unsavedMessages: []*Message{},
 		logger:          logger,
@@ -46,22 +47,28 @@ func (ms *Tracer) GetAllTracers() ([]*Tracer, error) {
 	return tracers, nil
 }
 
-// GetTracer retrieves a tracer by UUID from the database.
-func (ms *Tracer) GetTracer(uuid string) (*Tracer, error) {
-	var tracer Tracer
-	if err := ms.db.Preload("Messages").Where("uuid = ?", uuid).First(&tracer).Error; err != nil {
-		return nil, fmt.Errorf("error retrieving tracer: %v", err)
+func (ms *Tracer) GetMessagesByTracerUUID(tracerUUID string) ([]*Message, error) {
+	if ms.db == nil {
+		return nil, errors.New("GetMessagesByTracerUUID() database has not been initialised yet")
 	}
-	return &tracer, nil
+
+	var messages []*Message
+
+	// Retrieve messages with the specified tracerUUID from the database
+	if err := ms.db.Where("tracer_uuid = ?", tracerUUID).Find(&messages).Error; err != nil {
+		return nil, fmt.Errorf("error retrieving messages for tracerUUID %s: %v", tracerUUID, err)
+	}
+
+	return messages, nil
 }
 
 // AddTracer adds a new tracer to the database.
 func (ms *Tracer) AddTracer(instanceUUID, key string) error {
 	tracer := &Tracer{
 		UUID:         helpers.UUID(),
-		path:         ms.path,
-		application:  ms.application,
-		key:          key,
+		Path:         ms.Path,
+		Application:  ms.Application,
+		Key:          key,
 		instanceUUID: instanceUUID,
 	}
 	ms.UUID = tracer.UUID
@@ -71,9 +78,9 @@ func (ms *Tracer) AddTracer(instanceUUID, key string) error {
 	return nil
 }
 
-// UpdateTracer updates an existing tracer in the database.
-func (ms *Tracer) UpdateKey(key string) {
-	ms.key = key
+// TracerKey key could like modbus read-coil or something common
+func (ms *Tracer) TracerKey(key string) {
+	ms.Key = key
 }
 
 // UpdateTracer updates an existing tracer in the database.

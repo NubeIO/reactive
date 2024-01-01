@@ -4,12 +4,10 @@ import (
 	"fmt"
 	"github.com/NubeIO/reactive/tracer"
 	"github.com/NubeIO/schema"
-	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 	"log"
 	"reflect"
-	"strings"
 	"sync"
 )
 
@@ -37,8 +35,10 @@ const (
 )
 
 type Details struct {
-	Category string  `json:"category"`
-	ParentID *string `json:"parentID"`
+	Category  string  `json:"category"`
+	ParentID  *string `json:"parentID"`
+	HasDB     bool    `json:"hasDB"`
+	HasLogger bool    `json:"hasLogger"`
 }
 
 type Node interface {
@@ -49,6 +49,8 @@ type Node interface {
 	Delete()
 	GetUUID() string
 	GetParentUUID() string
+	GetPluginName() string
+	GetApplicationUse() string
 	GetID() string
 	GetNodeName() string
 	NewPort(port *Port)
@@ -92,9 +94,12 @@ type Node interface {
 	GetPortValuesChildNode(uuid string) []*Port
 	SetLastValueChildNode(uuid string, port *Port)
 
-	AddTracer(stack *tracer.Tracer)
-	Tracer() *tracer.Tracer
+	GetTracer() *tracer.Tracer
+	SetTracer(key string) *tracer.Tracer
+	InitTracer(t *tracer.Tracer)
 
+	SupportsDB() bool
+	SupportsLogging() bool
 	AddDB(db *gorm.DB)
 	GetDB() *gorm.DB
 
@@ -110,14 +115,6 @@ var runtimeNodesMutex sync.Mutex
 
 func (n *BaseNode) GetUUID() string {
 	return n.UUID
-}
-
-func (n *BaseNode) GetID() string {
-	return n.ID
-}
-
-func (n *BaseNode) GetNodeName() string {
-	return n.Name
 }
 
 func (n *BaseNode) GetInputs() []*Port {
@@ -212,13 +209,7 @@ func (n *BaseNode) PublishMessage(port *Port, setLastValue ...bool) {
 
 type Options struct {
 	addToNodesMap bool
-	Meta          *Meta
-}
-
-func generateShortUUID() string {
-	uuidWithoutHyphens := strings.ReplaceAll(uuid.New().String(), "-", "")
-	shortUUID := uuidWithoutHyphens[:10]
-	return shortUUID
+	Meta          *Meta `json:"meta"`
 }
 
 // printValue converts a value to a string representation.
